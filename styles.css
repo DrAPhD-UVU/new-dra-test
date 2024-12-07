@@ -11,7 +11,19 @@ h1 {
     text-align: center;
 }
 
+h2 {
+    color: #444;
+    border-bottom: 1px solid #ccc;
+}
+
 p {
     color: #666;
     line-height: 1.6;
+}
+
+footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.8em;
+    color: #888;
 }
