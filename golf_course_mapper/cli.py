@@ -45,6 +45,8 @@ Examples:
     parser.add_argument("--demo-lat", type=float, default=32.8998, help="Demo course centre latitude (default San Diego)")
     parser.add_argument("--demo-lon", type=float, default=-117.2498, help="Demo course centre longitude")
     parser.add_argument("--demo-name", type=str, default="Demo Golf Course", help="Course name for demo SVG")
+    parser.add_argument("--satellite", action="store_true", help="Fetch satellite tiles and embed as background layer in the SVG (requires network)")
+    parser.add_argument("--sat-zoom", type=int, default=0, help="Satellite tile zoom level (0=auto, typically 16-17 for golf courses)")
 
     args = parser.parse_args(argv)
 
@@ -57,6 +59,8 @@ Examples:
         output_dir=args.out,
         svg_size=args.size,
         simplify_tolerance=args.simplify,
+        satellite=args.satellite,
+        sat_zoom=args.sat_zoom,
     )
 
     if args.demo:
