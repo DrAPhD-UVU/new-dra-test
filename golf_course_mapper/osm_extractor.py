@@ -145,7 +145,7 @@ class OSMExtractor:
     """Download and parse OSM elements into geometry lists per feature type."""
 
     FEATURE_TYPES = [
-        "course_boundary", "fairway", "tee", "green", "bunker",
+        "course_boundary", "hole_boundary", "fairway", "tee", "green", "bunker",
         "water", "river", "ocean", "rough", "path", "building",
     ]
 
