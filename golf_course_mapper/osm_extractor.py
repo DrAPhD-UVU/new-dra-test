@@ -98,7 +98,7 @@ out skel qt;
 # Tag → layer mapping
 # ──────────────────────────────────────────────────────────────────────────────
 
-def _classify(tags: dict) -> str | None:
+def _classify(tags: dict):
     leisure = tags.get("leisure", "")
     golf = tags.get("golf", "")
     natural = tags.get("natural", "")
