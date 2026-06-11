@@ -83,7 +83,7 @@ class CVSegmenter:
 
     # ------------------------------------------------------------------ public
 
-    def segment(self, image_path: str | Path, bbox: dict) -> dict:
+    def segment(self, image_path, bbox: dict) -> dict:
         """
         Segment an aerial image into golf feature polygons.
 
@@ -137,8 +137,8 @@ class CVSegmenter:
         logger.info("CV segmentation found: %s", totals)
         return features
 
-    def save_debug_masks(self, image_path: str | Path, bbox: dict,
-                         out_dir: str | Path) -> list:
+    def save_debug_masks(self, image_path, bbox: dict,
+                         out_dir) -> list:
         """Write per-class binary masks alongside the source for tuning."""
         img = cv2.imread(str(image_path))
         h, w = img.shape[:2]

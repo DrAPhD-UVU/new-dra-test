@@ -89,7 +89,7 @@ class SatelliteFetcher:
         self.tile_delay = tile_delay
 
     def fetch(self, bbox: dict, output_dir: str = "./output",
-              name: str = "satellite") -> Path | None:
+              name: str = "satellite"):
         """
         Download and stitch satellite tiles for bbox.
         Returns path to the PNG, or None if all sources fail.
@@ -161,7 +161,7 @@ class SatelliteFetcher:
                 time.sleep(self.tile_delay)
         return ok >= total // 2
 
-    def _fetch_tile(self, url_tpl: str, x: int, y: int, z: int) -> Image.Image | None:
+    def _fetch_tile(self, url_tpl: str, x: int, y: int, z: int):
         url = url_tpl.format(z=z, x=x, y=y)
         for attempt in range(self.retries):
             try:
