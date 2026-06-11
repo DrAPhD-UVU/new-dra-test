@@ -47,6 +47,9 @@ Examples:
     parser.add_argument("--demo-name", type=str, default="Demo Golf Course", help="Course name for demo SVG")
     parser.add_argument("--satellite", action="store_true", help="Fetch satellite tiles and embed as background layer in the SVG (requires network)")
     parser.add_argument("--sat-zoom", type=int, default=0, help="Satellite tile zoom level (0=auto, typically 16-17 for golf courses)")
+    parser.add_argument("--cv", action="store_true", help="Use computer-vision segmentation of satellite imagery instead of OSM data (use with --lat/--lon, or with --cv-image)")
+    parser.add_argument("--cv-image", help="Segment an existing geo-referenced aerial image (requires --cv-bbox)")
+    parser.add_argument("--cv-bbox", help="Bbox for --cv-image as 'min_lat,min_lon,max_lat,max_lon'")
 
     args = parser.parse_args(argv)
 
@@ -77,6 +80,23 @@ Examples:
         totals = {k: len(v) for k, v in features.items() if v}
         print(f"\nDemo SVG saved: {path}")
         print(f"Features: {totals}")
+        return
+
+    if args.cv_image:
+        if not args.cv_bbox:
+            parser.error("--cv-image requires --cv-bbox 'min_lat,min_lon,max_lat,max_lon'")
+        parts = [float(x) for x in args.cv_bbox.split(",")]
+        bbox = {"min_lat": parts[0], "min_lon": parts[1],
+                "max_lat": parts[2], "max_lon": parts[3]}
+        name = args.name or "cv_course"
+        path = pipeline.run_cv_on_image(args.cv_image, bbox, name)
+        print(f"\nSaved: {path}")
+        return
+
+    if args.cv and args.lat is not None and args.lon is not None:
+        path = pipeline.run_cv_by_coords(args.lat, args.lon, args.radius,
+                                         course_name=args.name or "")
+        print(f"\nSaved: {path}")
         return
 
     if args.batch:

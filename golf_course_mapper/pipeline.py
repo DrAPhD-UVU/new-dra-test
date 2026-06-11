@@ -4,6 +4,7 @@ Optional: fetch satellite tiles and embed as background layer.
 """
 
 import logging
+import math
 import time
 from pathlib import Path
 
@@ -84,6 +85,43 @@ class GolfCoursePipeline:
             logger.info("No detail features — re-querying full bbox")
             features = self.extractor.extract(course["bbox"])
         return features
+
+    def run_cv_on_image(self, image_path: str, bbox: dict, course_name: str) -> Path:
+        """
+        Computer-vision path: segment an existing geo-referenced aerial image
+        into golf features and render the SVG. Used for courses missing from
+        OSM, or to refine OSM outlines against current imagery.
+        """
+        from .cv_segmenter import CVSegmenter
+        logger.info("=== CV pipeline: image=%s ===", image_path)
+        t0 = time.time()
+        segmenter = CVSegmenter()
+        features = segmenter.segment(image_path, bbox)
+        out = self.vectorizer.render(features, bbox, course_name, self.output_dir)
+        logger.info("Done in %.1f s → %s", time.time() - t0, out)
+        return out
+
+    def run_cv_by_coords(self, lat: float, lon: float, radius_m: int = 1000,
+                         course_name: str = "") -> Path:
+        """
+        Fully automatic CV path: fetch satellite tiles for the area, then
+        segment them. No OSM feature data needed — only the imagery.
+        """
+        from .satellite import SatelliteFetcher
+        # Build a bbox around the centre point
+        R = 6_371_000
+        dlat = math.degrees(radius_m / R)
+        dlon = math.degrees(radius_m / (R * math.cos(math.radians(lat))))
+        bbox = {"min_lat": lat - dlat, "max_lat": lat + dlat,
+                "min_lon": lon - dlon, "max_lon": lon + dlon}
+
+        name = course_name or f"course_{lat:.4f}_{lon:.4f}"
+        fetcher = SatelliteFetcher(zoom=self.sat_zoom)
+        sat_path = fetcher.fetch(bbox, output_dir=str(self.output_dir),
+                                 name=name.lower().replace(" ", "_"))
+        if sat_path is None:
+            raise RuntimeError("Satellite imagery unavailable — cannot run CV pipeline")
+        return self.run_cv_on_image(str(sat_path), bbox, name)
 
     def _add_satellite(self, svg_path: Path, bbox: dict, name: str) -> Path:
         try:

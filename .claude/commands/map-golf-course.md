@@ -46,6 +46,18 @@ python -m golf_course_mapper.cli --lat <LAT> --lon <LON> --out ./output --size 4
 python -m golf_course_mapper.cli --batch "$ARGUMENTS" --out ./output --size 4096 --verbose
 ```
 
+**Computer-vision mode** (courses missing from OSM — segments satellite imagery directly):
+```bash
+python -m golf_course_mapper.cli --cv --lat <LAT> --lon <LON> --radius 1000 --name "Course Name" --out ./output --verbose
+```
+
+**CV on a local aerial image** (already geo-referenced):
+```bash
+python -m golf_course_mapper.cli --cv-image photo.png --cv-bbox "min_lat,min_lon,max_lat,max_lon" --name "Course Name"
+```
+
+If OSM returns no detail features (only a boundary), automatically fall back to CV mode using the boundary's bbox. Run `python -m golf_course_mapper.cv_validate` to sanity-check the segmenter offline (no network needed).
+
 ### 3 — Handle errors & retry
 
 - If the Overpass API times out, retry up to **4 times** with exponential backoff (5, 10, 20, 40 s).
