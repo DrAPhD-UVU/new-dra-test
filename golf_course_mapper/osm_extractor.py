@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
     "https://overpass.openstreetmap.ru/api/interpreter",
 ]

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
     "https://overpass.openstreetmap.ru/api/interpreter",
 ]
@@ -116,7 +117,7 @@ out skel qt;
         return {"name": course_name, "osm_type": best["type"], "osm_id": best["id"], "bbox": bbox, "elements": elements}
 
     def _resolve_osm_element(self, osm_type: str, osm_id: str, display_name: str) -> dict:
-        typ = osm_type[0].upper()  # N / W / R
+        typ = osm_type.lower()  # way / node / relation
         query = f"""
 [out:json][timeout:60];
 {typ}({osm_id});
