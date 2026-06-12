@@ -185,39 +185,47 @@ def embed_satellite_in_svg(svg_path: Path, sat_path: Path, bbox: dict,
     """
     Insert a <image> element as the bottom layer of an existing SVG so the
     satellite imagery appears behind the vector outlines.
+
+    Uses text-based insertion (not ET round-trip) to preserve namespace
+    declarations and avoid truncation of large base64 payloads.
+    Writes both xlink:href (Illustrator / SVG 1.1) and href (SVG 2).
     Returns the path to the (overwritten) SVG.
     """
-    import base64, re, xml.etree.ElementTree as ET
-
-    ET.register_namespace("", "http://www.w3.org/2000/svg")
+    import base64, re
 
     with open(sat_path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode()
     data_uri = f"data:image/png;base64,{b64}"
 
-    tree = ET.parse(svg_path)
-    root = tree.getroot()
-    ns   = "http://www.w3.org/2000/svg"
+    img_str = (
+        f'<image id="satellite_background" x="0" y="0" '
+        f'width="{svg_size}" height="{svg_size}" '
+        f'preserveAspectRatio="none" '
+        f'xlink:href="{data_uri}" href="{data_uri}"/>'
+    )
 
-    # Build image element
-    img_el = ET.Element(f"{{{ns}}}image", attrib={
-        "id":      "satellite_background",
-        "x":       "0", "y": "0",
-        "width":   str(svg_size), "height": str(svg_size),
-        "href":    data_uri,
-        "preserveAspectRatio": "none",
-    })
+    svg_text = svg_path.read_text(encoding="utf-8")
 
-    # Insert after <rect id="background"> but before all layers
-    children = list(root)
-    insert_at = 1
-    for i, ch in enumerate(children):
-        cid = ch.get("id", "")
-        if cid == "background":
-            insert_at = i + 1
-            break
+    # Ensure xlink namespace is declared on the root <svg> element
+    if "xmlns:xlink" not in svg_text:
+        svg_text = re.sub(
+            r"(<svg\b)",
+            r'\1 xmlns:xlink="http://www.w3.org/1999/xlink"',
+            svg_text,
+            count=1,
+        )
 
-    root.insert(insert_at, img_el)
-    tree.write(svg_path, xml_declaration=True, encoding="unicode")
-    logger.info("Embedded satellite background into %s", svg_path)
+    # Insert image element right after the background <rect … />
+    m = re.search(r'id="background"[^>]*/>', svg_text, re.DOTALL)
+    if m:
+        insert_pos = m.end()
+    else:
+        # Fallback: right after the opening <svg …> tag
+        m2 = re.search(r"<svg\b[^>]*>", svg_text, re.DOTALL)
+        insert_pos = m2.end() if m2 else len(svg_text)
+
+    svg_text = svg_text[:insert_pos] + "\n  " + img_str + svg_text[insert_pos:]
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+    logger.info("Embedded satellite background into %s  (%d KB)", svg_path, len(svg_text) // 1024)
     return svg_path
